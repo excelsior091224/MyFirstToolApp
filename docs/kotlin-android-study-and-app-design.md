@@ -398,6 +398,8 @@ TaskListUiState:
 
 対象ファイル:
 
+- gradle.properties
+- build.gradle.kts（ルート）
 - app/build.gradle.kts
 - gradle/libs.versions.toml
 
@@ -408,6 +410,18 @@ TaskListUiState:
 - Room（runtime / ktx / compiler）
 - Lifecycle（viewmodel-ktx / runtime-ktx）
 - RecyclerView
+
+AGP 9系での注意点:
+
+- AGP 9.0以降は「組み込みKotlinサポート」と「新DSL」がデフォルト有効になっており、このプロジェクトで使うKotlin 2.2.10 + KSP 2.2.10-2.0.2の組み合わせでは明示的な`kotlin-android`プラグインと競合する
+- gradle.propertiesに次の2行を追加して、旧来の方式に固定する
+
+```properties
+android.builtInKotlin=false
+android.newDsl=false
+```
+
+- ルートのbuild.gradle.ktsにも`kotlin-android`と`ksp`を`apply false`で宣言しておく
 
 ### 10.2 データ層（Room）
 

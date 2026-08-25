@@ -68,6 +68,8 @@ Roomが使える状態にして、TaskテーブルとDAOを作る。
 
 ### 3-2. 編集するファイル
 
+- gradle.properties
+- build.gradle.kts（ルート）
 - gradle/libs.versions.toml
 - app/build.gradle.kts
 
@@ -88,13 +90,36 @@ Roomが使える状態にして、TaskテーブルとDAOを作る。
 - lifecycle-viewmodel-ktx: ViewModel + coroutine
 - recyclerview: リスト画面
 
-### 3-5. 新規作成ファイル
+### 3-5. AGP 9でのKotlinプラグイン設定の注意点
+
+AGP 9.0以降は「組み込みKotlinサポート」がデフォルトで有効なため、以下の設定がないと `kotlin-android` プラグインと衝突してビルドが失敗する。
+
+gradle.properties
+
+```properties
+# AGP 9の組み込みKotlinはKSPのソースセット登録と競合するため無効化する
+android.builtInKotlin=false
+# org.jetbrains.kotlin.android 2.2.10はAGP 9の新DSLに未対応のため無効化する
+android.newDsl=false
+```
+
+build.gradle.kts（ルート）にも `kotlin-android` と `ksp` を `apply false` で宣言する。
+
+```kotlin
+plugins {
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.ksp) apply false
+}
+```
+
+### 3-6. 新規作成ファイル
 
 - app/src/main/java/com/example/myfirsttoolapp/data/local/TaskEntity.kt
 - app/src/main/java/com/example/myfirsttoolapp/data/local/TaskDao.kt
 - app/src/main/java/com/example/myfirsttoolapp/data/local/AppDatabase.kt
 
-### 3-6. 写経用コード
+### 3-7. 写経用コード
 
 TaskEntity.kt
 
@@ -177,15 +202,16 @@ abstract class AppDatabase : RoomDatabase() {
 }
 ```
 
-### 3-7. 完了チェック
+### 3-8. 完了チェック
 
 - ビルドが通る
 - Room関連のimportエラーがない
 
-### 3-8. よくあるつまずき
+### 3-9. よくあるつまずき
 
 - KSPプラグインを入れ忘れてコンパイルが通らない
 - Room compilerをkspではなくimplementationに入れてしまう
+- gradle.propertiesに `android.builtInKotlin=false` / `android.newDsl=false` を入れ忘れて `kotlin-android` プラグインが適用できない（AGP 9以降）
 
 ---
 
@@ -610,7 +636,28 @@ class MainActivity : AppCompatActivity() {
 - pluginsにksp
 - dependenciesに ksp(room-compiler)
 
-### 7-3. Database access on main thread
+### 7-3. Error resolving plugin ... already on the classpath ・ Cannot add extension with name 'kotlin' ・ Using kotlin.sourceSets DSL to add Kotlin sources is not allowed with built-in Kotlin
+
+原因:
+
+- AGP 9以降は「組み込みKotlinサポート」がデフォルト有効で、明示的な `kotlin-android` プラグイン適用と衝突する
+- KSPが追加するソースセット登録は組み込みKotlinでは許可されない
+
+対処:
+
+- gradle.propertiesに `android.builtInKotlin=false` を追加（組み込みKotlinを無効化）
+
+### 7-4. class ...ApplicationExtensionImpl cannot be cast to class ...BaseExtension
+
+原因:
+
+- `org.jetbrains.kotlin.android` 2.2.10 が AGP 9 の新DSL（`android.newDsl=true` がデフォルト）に未対応
+
+対処:
+
+- gradle.propertiesに `android.newDsl=false` を追加（旧DSLに固定）
+
+### 7-5. Database access on main thread
 
 原因:
 
@@ -620,7 +667,7 @@ class MainActivity : AppCompatActivity() {
 
 - ViewModelの viewModelScope.launch で呼ぶ
 
-### 7-4. RecyclerViewが表示されない
+### 7-6. RecyclerViewが表示されない
 
 原因:
 

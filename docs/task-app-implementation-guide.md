@@ -3,7 +3,38 @@
 このファイルは「まず動く最小構成」を目的にした実装例です。
 Viewベース（XML + RecyclerView）で、Room + MVVM の最初の到達点を作ります。
 
+## 0. 前提: AGP 9系での注意点
+
+AGP 9.0以降は「組み込みKotlinサポート」がデフォルトで有効になり、`org.jetbrains.kotlin.android` プラグインを明示的に適用すると衝突する（`already on the classpath with an unknown version` 等のエラーになる）。
+
+このプロジェクトで使うKSP (`2.2.10-2.0.2`) は組み込みKotlinと併用すると `kotlin.sourceSets` 関連のエラーが出るため、以下の2点を `gradle.properties` に設定して従来方式（明示的な `kotlin-android` プラグイン + 旧DSL）に固定する。
+
+```properties
+# AGP 9の組み込みKotlinはKSPのソースセット登録と競合するため無効化する
+android.builtInKotlin=false
+# org.jetbrains.kotlin.android 2.2.10はAGP 9の新DSLに未対応のため無効化する
+android.newDsl=false
+```
+
+この設定をせずに `kotlin-android` プラグインを適用すると、ビルドが以下のように失敗する。
+
+1. `Error resolving plugin ... already on the classpath with an unknown version`
+2. (root buildにプラグインをapply falseで追加後) `Cannot add extension with name 'kotlin'`
+3. (`android.builtInKotlin=false` を忘れたまま) `Using kotlin.sourceSets DSL to add Kotlin sources is not allowed with built-in Kotlin.`
+4. (`android.newDsl=false` を忘れたまま) `class ...ApplicationExtensionImpl cannot be cast to class ...BaseExtension`
+
 ## 1. 依存関係
+
+### 1-0. build.gradle.kts（ルート）
+
+```kotlin
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+plugins {
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.ksp) apply false
+}
+```
 
 ### 1-1. gradle/libs.versions.toml
 

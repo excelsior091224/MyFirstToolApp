@@ -29,6 +29,8 @@
 
 今日触る予定のファイル:
 
+- gradle.properties
+- build.gradle.kts（ルート）
 - gradle/libs.versions.toml
 - app/build.gradle.kts
 - app/src/main/java/com/example/myfirsttoolapp/data/local/TaskEntity.kt
@@ -38,6 +40,16 @@
 ---
 
 ## 2. 依存関係の追加
+
+### 2-0. AGP 9対応（gradle.properties / ルートbuild.gradle.kts）
+
+- [ ] gradle.propertiesに `android.builtInKotlin=false` を追加した
+- [ ] gradle.propertiesに `android.newDsl=false` を追加した
+- [ ] ルートのbuild.gradle.ktsに `kotlin-android` と `ksp` を `apply false` で追加した
+
+確認ポイント:
+
+- AGP 9.0以降は「組み込みKotlin」と「新DSL」がデフォルト有効なため、上記を設定しないと `kotlin-android` プラグインの適用でエラーになる
 
 ### 2-1. libs.versions.toml
 
@@ -104,6 +116,7 @@
 - [ ] エラーログ先頭の原因を確認した
 - [ ] 依存関係（plugins / dependencies）を再確認した
 - [ ] package名とimportを再確認した
+- [ ] gradle.propertiesの `android.builtInKotlin=false` / `android.newDsl=false` を確認した（AGP 9以降）
 
 ---
 
